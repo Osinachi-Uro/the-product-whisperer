@@ -22,8 +22,8 @@ with open("keywords.json") as f:
     keyword_config = json.load(f)
 
 PRIMARY_KEYWORDS = keyword_config.get("primary_keywords", [])
-SURGE_KEYWORDS = keyword_config.get("surge_keywords", [])
-SPAM_TOKENS = keyword_config.get("spam_tokens", [])
+PRODUCT = keyword_config.get("product_keywords", [])
+SERVICE= keyword_config.get("service_keywords", [])
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -78,7 +78,7 @@ def format_tweet_blockkit(tweet, user):
 
 def search_and_notify():
     one_day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).replace(microsecond=0).isoformat()
-    keyword_clauses = [f'"{kw}"' for kw in PRIMARY_KEYWORDS + SURGE_KEYWORDS]
+    keyword_clauses = [f'"{kw}"' for kw in PRIMARY_KEYWORDS + PRODUCT]
     query = f"({' OR '.join(keyword_clauses)}) -is:retweet -is:reply lang:en"
 
     try:
@@ -124,7 +124,7 @@ def search_and_notify():
                 tweet_url = f"https://twitter.com/{user.username}/status/{tweet.id}"
 
                 # Skip tweets containing spam tokens
-                if any(token.lower() in tweet_text.lower() for token in SPAM_TOKENS):
+                if any(token.lower() in tweet_text.lower() for token in SERVICE):
                     logging.info(f"Tweet skipped due to spam token: {tweet_url}")
                     continue
 
@@ -139,7 +139,7 @@ def search_and_notify():
                     logging.info(f"Tweet skipped due to low follower count ({followers}): {tweet_url}")
                     continue
 
-                if any(kw in tweet_text for kw in PRIMARY_KEYWORDS + SURGE_KEYWORDS):
+                if any(kw in tweet_text for kw in PRIMARY_KEYWORDS + PRODUCT):
                     blocks = format_tweet_blockkit(tweet, user)
                     logging.info(f"Tweet matched: {tweet.text}")
                     send_to_slack_blockkit(blocks, thread_ts=thread_ts)
